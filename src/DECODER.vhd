@@ -7,7 +7,7 @@ entity DECODER is
         PROGRAM_COUNTER : in integer;
         INS : in std_logic_vector(49 downto 0);
         OPCODE : out std_logic_vector(5 downto 0);
-        FIRST_ADDRESS, LAST_ADDRESS : out std_logic_vector(22 downto 0)
+        FILENAME: out 
     );
 end entity DECODER;
 

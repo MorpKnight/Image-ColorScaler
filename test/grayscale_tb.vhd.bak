@@ -6,9 +6,6 @@ USE std.textio.ALL;
 USE std.env.finish;
 
 ENTITY grayscale_tb IS
-  PORT (
-    clk : IN STD_LOGIC
-  );
 END grayscale_tb;
 
 ARCHITECTURE sim OF grayscale_tb IS
@@ -35,6 +32,14 @@ ARCHITECTURE sim OF grayscale_tb IS
   SIGNAL r_out : STD_LOGIC_VECTOR(7 DOWNTO 0);
   SIGNAL g_out : STD_LOGIC_VECTOR(7 DOWNTO 0);
   SIGNAL b_out : STD_LOGIC_VECTOR(7 DOWNTO 0);
+
+  SIGNAL clk : STD_LOGIC := '0';
+
+  COMPONENT clock_gen IS
+    PORT (
+      clk : OUT STD_LOGIC
+    );
+  END COMPONENT;
 
 BEGIN
 

@@ -36,7 +36,6 @@ begin
       g_weighted <= unsigned("0" & g_in(7 downto 1));
       b_weighted <= unsigned("0000" & b_in(7 downto 4));
 
-      -- Referensi en.wikipedia.org/wiki/Grayscale
       luma <= std_logic_vector(r_weighted + g_weighted + b_weighted);
     end if;
   end process;

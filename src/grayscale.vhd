@@ -28,6 +28,15 @@ begin
 
   process(clk)
   begin
+    -- This process converts an RGB image to grayscale by calculating the weighted sum of the red, green, and blue components.
+    -- The weighted sum is then assigned to the 'luma' signal.
+    -- Inputs:
+    --   - clk: Clock signal
+    --   - r_in_gray: 8-bit input signal representing the red component of the RGB image in grayscale
+    --   - g_in_gray: 8-bit input signal representing the green component of the RGB image in grayscale
+    --   - b_in_gray: 8-bit input signal representing the blue component of the RGB image in grayscale
+    -- Outputs:
+    --   - luma: 8-bit output signal representing the grayscale value of the image
     if rising_edge(clk) then
       r_weighted <= unsigned("00" & r_in_gray(7 downto 2));
       g_weighted <= unsigned("0" & g_in_gray(7 downto 1));
@@ -37,6 +46,8 @@ begin
     end if;
   end process;
 
+  -- This code assigns the grayscale value to the red, green, and blue output signals.
+  -- The luma value is converted to a std_logic_vector and assigned to r_out_gray, g_out_gray, and b_out_gray.
   r_out_gray <= std_logic_vector(luma);
   g_out_gray <= std_logic_vector(luma);
   b_out_gray <= std_logic_vector(luma);

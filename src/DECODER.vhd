@@ -1,23 +1,22 @@
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
+LIBRARY IEEE;
+USE IEEE.std_logic_1164.ALL;
+USE IEEE.numeric_std.ALL;
 
-entity DECODER is
-    port (
-        PROGRAM_COUNTER : in integer;
-        INS : in std_logic_vector(49 downto 0);
-        OPCODE : out std_logic_vector(5 downto 0);
-        FILENAME: out 
+ENTITY DECODER IS
+    PORT (
+        PROGRAM_COUNTER : IN INTEGER;
+        INSTRUCTION : IN STD_LOGIC_VECTOR(49 DOWNTO 0);
+        OPCODE : OUT STD_LOGIC_VECTOR(5 DOWNTO 0)
     );
-end entity DECODER;
+END ENTITY DECODER;
 
-architecture DECODE of DECODER is
-    
-begin
-    
-    DEC: process(PROGRAM_COUNTER)
-    begin
-        
-    end process DEC;
-    
-end architecture DECODE;
+ARCHITECTURE DECODE OF DECODER IS
+
+BEGIN
+
+    DEC : PROCESS (PROGRAM_COUNTER, INSTRUCTION)
+    BEGIN
+        OPCODE <= INSTRUCTION(49 DOWNTO 44);
+    END PROCESS DEC;
+
+END ARCHITECTURE DECODE;

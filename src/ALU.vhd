@@ -6,7 +6,8 @@ USE std.env.ALL;
 
 ENTITY ALU IS
     PORT (
-        CLK : IN STD_LOGIC
+        CLK : IN STD_LOGIC;
+        DONE : OUT STD_LOGIC
     );
 END ENTITY ALU;
 
@@ -35,7 +36,6 @@ ARCHITECTURE ALU_PRODUCT OF ALU IS
         );
     END COMPONENT CLK;
 BEGIN
-
     COLOR_EDIT : ENTITY work.grayscale(rtl)
         PORT MAP(
             CLK => CLK,
@@ -57,6 +57,8 @@ BEGIN
         VARIABLE IMG_W, IMG_H, PADDING, RAM_ADDR : INTEGER := 0;
         VARIABLE CHAR : CHARACTER;
     BEGIN
+        DONE <= '0';
+
         FOR i IN HEADER_TYPE'RANGE LOOP
             read(R_FILE, header(i));
         END LOOP;
@@ -129,6 +131,7 @@ BEGIN
         file_close(W_FILE);
         REPORT "DONE"
             SEVERITY NOTE;
+        DONE <= '1';
 
     END PROCESS;
 END ARCHITECTURE ALU_PRODUCT;

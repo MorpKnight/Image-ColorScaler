@@ -17,9 +17,7 @@ begin
     
     DEC: process(PROGRAM_COUNTER)
     begin
-        OPCODE <= INS(49 downto 44);
-        FIRST_ADDRESS <= INS(43 downto 21);
-        LAST_ADDRESS <= INS(20 downto 0);
+        
     end process DEC;
     
 end architecture DECODE;

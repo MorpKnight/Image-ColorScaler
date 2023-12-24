@@ -5,7 +5,6 @@ use ieee.numeric_std.all;
 entity redscale is
     port (
         clk : in std_logic;
-        -- Make sure that r_in = g_in = b_in or grayscale
         r_in_red : in std_logic_vector(7 downto 0);
         g_in_red : in std_logic_vector(7 downto 0);
         b_in_red : in std_logic_vector(7 downto 0);

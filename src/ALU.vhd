@@ -7,7 +7,8 @@ USE std.env.ALL;
 ENTITY ALU IS
     PORT (
         CLK : IN STD_LOGIC;
-        OPCODE : IN STD_LOGIC_VECTOR(5 DOWNTO 0);
+        PC_ALU : INTEGER;
+        OPCODE_ALU : IN STD_LOGIC_VECTOR(5 DOWNTO 0);
         DONE : OUT STD_LOGIC
     );
 END ENTITY ALU;
@@ -142,119 +143,125 @@ BEGIN
         VARIABLE IMG : IMAGE_PTR;
         VARIABLE CHAR : CHARACTER;
     BEGIN
-        FOR i IN HEADER_TYPE'RANGE LOOP
-            read(SOURCE_FILE, HEADER(i));
-        END LOOP;
-
-        ASSERT HEADER(0) = 'B' AND HEADER(1) = 'M'
-        REPORT "Not a BMP file" SEVERITY FAILURE;
-
-        ASSERT CHARACTER'pos(HEADER(10)) = 54 AND CHARACTER'pos(HEADER(11)) = 0 AND
-        CHARACTER'pos(HEADER(12)) = 0 AND CHARACTER'pos(HEADER(13)) = 0
-        REPORT "Not a 24-bit BMP file" SEVERITY FAILURE;
-
-        ASSERT CHARACTER'pos(HEADER(14)) = 40 AND CHARACTER'pos(HEADER(15)) = 0 AND
-        CHARACTER'pos(HEADER(16)) = 0 AND CHARACTER'pos(HEADER(17)) = 0
-        REPORT "Not a 24-bit BMP file" SEVERITY FAILURE;
-
-        ASSERT CHARACTER'pos(HEADER(28)) = 24 AND CHARACTER'pos(HEADER(29)) = 0
-        REPORT "Not a 24-bit BMP file" SEVERITY FAILURE;
-
-        IMG_W := CHARACTER'pos(HEADER(18)) + CHARACTER'pos(HEADER(19)) * 256 +
-            CHARACTER'pos(HEADER(20)) * 256 * 256 + CHARACTER'pos(HEADER(21)) * 256 * 256 * 256;
-
-        IMG_H := CHARACTER'pos(HEADER(22)) + CHARACTER'pos(HEADER(23)) * 256 +
-            CHARACTER'pos(HEADER(24)) * 256 * 256 + CHARACTER'pos(HEADER(25)) * 256 * 256 * 256;
-
-        PADDING := (4 - (IMG_W * 3) MOD 4) MOD 4;
-
-        IMG := NEW IMAGE_TYPE(0 TO IMG_H - 1);
-
-        REPORT "Image width: " & INTEGER'image(IMG_W) & " px" SEVERITY NOTE;
-        REPORT "Image height: " & INTEGER'image(IMG_H) & " px" SEVERITY NOTE;
-
-        FOR ROW_I IN 0 TO IMG_H - 1 LOOP
-            ROW := NEW ROW_TYPE(0 TO IMG_W - 1);
-            FOR COL_I IN 0 TO IMG_W - 1 LOOP
-                read(SOURCE_FILE, CHAR);
-                ROW(COL_I).B := STD_LOGIC_VECTOR(to_unsigned(CHARACTER'pos(CHAR), 8));
-                read(SOURCE_FILE, CHAR);
-                ROW(COL_I).G := STD_LOGIC_VECTOR(to_unsigned(CHARACTER'pos(CHAR), 8));
-                read(SOURCE_FILE, CHAR);
-                ROW(COL_I).R := STD_LOGIC_VECTOR(to_unsigned(CHARACTER'pos(CHAR), 8));
+        IF PC_ALU = 5 THEN
+            DONE <= '0';
+            FOR i IN HEADER_TYPE'RANGE LOOP
+                read(SOURCE_FILE, HEADER(i));
             END LOOP;
 
-            FOR i IN 1 TO PADDING LOOP
-                read(SOURCE_FILE, CHAR);
-            END LOOP;
-            IMG(ROW_I) := ROW;
-        END LOOP;
+            ASSERT HEADER(0) = 'B' AND HEADER(1) = 'M'
+            REPORT "Not a BMP file" SEVERITY FAILURE;
 
-        FOR ROW_I IN 0 TO IMG_H - 1 LOOP
-            ROW := IMG(ROW_I);
-            FOR COL_I IN 0 TO IMG_W - 1 LOOP
-                IF OPCODE = "000000" THEN
-                    r_in_gray <= ROW(COL_I).R;
-                    g_in_gray <= ROW(COL_I).G;
-                    b_in_gray <= ROW(COL_I).B;
-                    WAIT UNTIL rising_edge(clk);
-                    ROW(COL_I).R := r_out_gray;
-                    ROW(COL_I).G := g_out_gray;
-                    ROW(COL_I).B := b_out_gray;
-                ELSIF OPCODE = "000001" THEN
-                    r_in_green <= ROW(COL_I).R;
-                    g_in_green <= ROW(COL_I).G;
-                    b_in_green <= ROW(COL_I).B;
-                    WAIT UNTIL rising_edge(clk);
-                    ROW(COL_I).R := r_out_green;
-                    ROW(COL_I).G := g_out_green;
-                    ROW(COL_I).B := b_out_green;
-                ELSIF OPCODE = "000010" THEN
-                    r_in_red <= ROW(COL_I).R;
-                    g_in_red <= ROW(COL_I).G;
-                    b_in_red <= ROW(COL_I).B;
-                    WAIT UNTIL rising_edge(clk);
-                    ROW(COL_I).R := r_out_red;
-                    ROW(COL_I).G := g_out_red;
-                    ROW(COL_I).B := b_out_red;
-                ELSIF OPCODE = "000011" THEN
-                    r_in_blue <= ROW(COL_I).R;
-                    g_in_blue <= ROW(COL_I).G;
-                    b_in_blue <= ROW(COL_I).B;
-                    WAIT UNTIL rising_edge(clk);
-                    ROW(COL_I).R := r_out_blue;
-                    ROW(COL_I).G := g_out_blue;
-                    ROW(COL_I).B := b_out_blue;
-                END IF;
-            END LOOP;
-        END LOOP;
+            ASSERT CHARACTER'pos(HEADER(10)) = 54 AND CHARACTER'pos(HEADER(11)) = 0 AND
+            CHARACTER'pos(HEADER(12)) = 0 AND CHARACTER'pos(HEADER(13)) = 0
+            REPORT "Not a 24-bit BMP file" SEVERITY FAILURE;
 
-        FOR i IN HEADER_TYPE'RANGE LOOP
-            write(DEST_FILE, HEADER(i));
-        END LOOP;
+            ASSERT CHARACTER'pos(HEADER(14)) = 40 AND CHARACTER'pos(HEADER(15)) = 0 AND
+            CHARACTER'pos(HEADER(16)) = 0 AND CHARACTER'pos(HEADER(17)) = 0
+            REPORT "Not a 24-bit BMP file" SEVERITY FAILURE;
 
-        FOR ROW_I IN 0 TO IMG_H - 1 LOOP
-            ROW := IMG(ROW_I);
-            FOR COL_I IN 0 TO IMG_W - 1 LOOP
-                CHAR := CHARACTER'val(to_integer(unsigned(ROW(COL_I).B)));
-                write(DEST_FILE, CHAR);
-                CHAR := CHARACTER'val(to_integer(unsigned(ROW(COL_I).G)));
-                write(DEST_FILE, CHAR);
-                CHAR := CHARACTER'val(to_integer(unsigned(ROW(COL_I).R)));
-                write(DEST_FILE, CHAR);
+            ASSERT CHARACTER'pos(HEADER(28)) = 24 AND CHARACTER'pos(HEADER(29)) = 0
+            REPORT "Not a 24-bit BMP file" SEVERITY FAILURE;
+
+            IMG_W := CHARACTER'pos(HEADER(18)) + CHARACTER'pos(HEADER(19)) * 256 +
+                CHARACTER'pos(HEADER(20)) * 256 * 256 + CHARACTER'pos(HEADER(21)) * 256 * 256 * 256;
+
+            IMG_H := CHARACTER'pos(HEADER(22)) + CHARACTER'pos(HEADER(23)) * 256 +
+                CHARACTER'pos(HEADER(24)) * 256 * 256 + CHARACTER'pos(HEADER(25)) * 256 * 256 * 256;
+
+            PADDING := (4 - (IMG_W * 3) MOD 4) MOD 4;
+
+            IMG := NEW IMAGE_TYPE(0 TO IMG_H - 1);
+
+            REPORT "Image width: " & INTEGER'image(IMG_W) & " px" SEVERITY NOTE;
+            REPORT "Image height: " & INTEGER'image(IMG_H) & " px" SEVERITY NOTE;
+
+            FOR ROW_I IN 0 TO IMG_H - 1 LOOP
+                ROW := NEW ROW_TYPE(0 TO IMG_W - 1);
+                FOR COL_I IN 0 TO IMG_W - 1 LOOP
+                    read(SOURCE_FILE, CHAR);
+                    ROW(COL_I).B := STD_LOGIC_VECTOR(to_unsigned(CHARACTER'pos(CHAR), 8));
+                    read(SOURCE_FILE, CHAR);
+                    ROW(COL_I).G := STD_LOGIC_VECTOR(to_unsigned(CHARACTER'pos(CHAR), 8));
+                    read(SOURCE_FILE, CHAR);
+                    ROW(COL_I).R := STD_LOGIC_VECTOR(to_unsigned(CHARACTER'pos(CHAR), 8));
+                END LOOP;
+
+                FOR i IN 1 TO PADDING LOOP
+                    read(SOURCE_FILE, CHAR);
+                END LOOP;
+                IMG(ROW_I) := ROW;
             END LOOP;
 
-            FOR i IN 1 TO PADDING LOOP
-                CHAR := CHARACTER'val(0);
-                write(DEST_FILE, CHAR);
+            FOR ROW_I IN 0 TO IMG_H - 1 LOOP
+                ROW := IMG(ROW_I);
+                FOR COL_I IN 0 TO IMG_W - 1 LOOP
+                    CASE OPCODE_ALU IS
+                        WHEN "000000" =>
+                            r_in_gray <= ROW(COL_I).R;
+                            g_in_gray <= ROW(COL_I).G;
+                            b_in_gray <= ROW(COL_I).B;
+                            WAIT UNTIL rising_edge(clk);
+                            ROW(COL_I).R := r_out_gray;
+                            ROW(COL_I).G := g_out_gray;
+                            ROW(COL_I).B := b_out_gray;
+                        WHEN "000001" =>
+                            r_in_green <= ROW(COL_I).R;
+                            g_in_green <= ROW(COL_I).G;
+                            b_in_green <= ROW(COL_I).B;
+                            WAIT UNTIL rising_edge(clk);
+                            ROW(COL_I).R := r_out_green;
+                            ROW(COL_I).G := g_out_green;
+                            ROW(COL_I).B := b_out_green;
+                        WHEN "000010" =>
+                            r_in_red <= ROW(COL_I).R;
+                            g_in_red <= ROW(COL_I).G;
+                            b_in_red <= ROW(COL_I).B;
+                            WAIT UNTIL rising_edge(clk);
+                            ROW(COL_I).R := r_out_red;
+                            ROW(COL_I).G := g_out_red;
+                            ROW(COL_I).B := b_out_red;
+                        WHEN "000011" =>
+                            r_in_blue <= ROW(COL_I).R;
+                            g_in_blue <= ROW(COL_I).G;
+                            b_in_blue <= ROW(COL_I).B;
+                            WAIT UNTIL rising_edge(clk);
+                            ROW(COL_I).R := r_out_blue;
+                            ROW(COL_I).G := g_out_blue;
+                            ROW(COL_I).B := b_out_blue;
+                        WHEN OTHERS =>
+                            NULL;
+                    END CASE;
+                END LOOP;
             END LOOP;
-        END LOOP;
 
-        deallocate(IMG);
-        file_close(SOURCE_FILE);
-        file_close(DEST_FILE);
-        DONE <= '1';
-        REPORT "Done" SEVERITY NOTE;
-        FINISH;
+            FOR i IN HEADER_TYPE'RANGE LOOP
+                write(DEST_FILE, HEADER(i));
+            END LOOP;
+
+            FOR ROW_I IN 0 TO IMG_H - 1 LOOP
+                ROW := IMG(ROW_I);
+                FOR COL_I IN 0 TO IMG_W - 1 LOOP
+                    CHAR := CHARACTER'val(to_integer(unsigned(ROW(COL_I).B)));
+                    write(DEST_FILE, CHAR);
+                    CHAR := CHARACTER'val(to_integer(unsigned(ROW(COL_I).G)));
+                    write(DEST_FILE, CHAR);
+                    CHAR := CHARACTER'val(to_integer(unsigned(ROW(COL_I).R)));
+                    write(DEST_FILE, CHAR);
+                END LOOP;
+
+                FOR i IN 1 TO PADDING LOOP
+                    CHAR := CHARACTER'val(0);
+                    write(DEST_FILE, CHAR);
+                END LOOP;
+            END LOOP;
+
+            deallocate(IMG);
+            file_close(SOURCE_FILE);
+            file_close(DEST_FILE);
+            DONE <= '1';
+            REPORT "Done" SEVERITY NOTE;
+            finish;
+        END IF;
     END PROCESS;
 END ARCHITECTURE rtl;

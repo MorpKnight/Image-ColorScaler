@@ -13,6 +13,59 @@ ENTITY ALU IS
 END ENTITY ALU;
 
 ARCHITECTURE rtl OF ALU IS
+    COMPONENT grayscale IS
+        PORT (
+            clk : IN STD_LOGIC;
+
+            r_in_gray : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+            g_in_gray : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+            b_in_gray : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+
+            r_out_gray : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+            g_out_gray : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+            b_out_gray : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
+        );
+    END COMPONENT grayscale;
+
+    COMPONENT greenscale IS
+        PORT (
+            clk : IN STD_LOGIC;
+            r_in_green : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+            g_in_green : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+            b_in_green : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+
+            r_out_green : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+            g_out_green : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+            b_out_green : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
+        );
+    END COMPONENT greenscale;
+
+    COMPONENT redscale IS
+        PORT (
+            clk : IN STD_LOGIC;
+            r_in_red : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+            g_in_red : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+            b_in_red : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+
+            r_out_red : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+            g_out_red : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+            b_out_red : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
+        );
+    END COMPONENT redscale;
+
+    COMPONENT bluescale IS
+        PORT (
+            clk : IN STD_LOGIC;
+            r_in_blue : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+            g_in_blue : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+            b_in_blue : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+
+            r_out_blue : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+            g_out_blue : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+            b_out_blue : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
+        );
+    END COMPONENT bluescale;
+
     TYPE HEADER_TYPE IS ARRAY (0 TO 53) OF CHARACTER;
     TYPE PIXEL_TYPE IS RECORD
         R : STD_LOGIC_VECTOR(7 DOWNTO 0);
@@ -24,20 +77,60 @@ ARCHITECTURE rtl OF ALU IS
     TYPE IMAGE_TYPE IS ARRAY (INTEGER RANGE <>) OF ROW_PTR;
     TYPE IMAGE_PTR IS ACCESS IMAGE_TYPE;
 
-    SIGNAL r_in, g_in, b_in : STD_LOGIC_VECTOR(7 DOWNTO 0);
-    SIGNAL r_out, g_out, b_out : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    SIGNAL r_in_gray, g_in_gray, b_in_gray, r_in_green, g_in_green, b_in_green : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    SIGNAL r_in_red, g_in_red, b_in_red, r_in_blue, g_in_blue, b_in_blue : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    SIGNAL r_out_gray, g_out_gray, b_out_gray, r_out_green, g_out_green, b_out_green : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    SIGNAL r_out_red, g_out_red, b_out_red, r_out_blue, g_out_blue, b_out_blue : STD_LOGIC_VECTOR(7 DOWNTO 0);
 BEGIN
 
-    COLOR : ENTITY work.greenscale(rtl)
-        PORT MAP(
-            CLK => clk,
-            R_IN => r_in,
-            G_IN => g_in,
-            B_IN => b_in,
-            R_OUT => r_out,
-            G_OUT => g_out,
-            B_OUT => b_out
-        );
+    GYSCL : grayscale
+    PORT MAP(
+        clk => clk,
+
+        r_in_gray => r_in_gray,
+        g_in_gray => g_in_gray,
+        b_in_gray => b_in_gray,
+
+        r_out_gray => r_out_gray,
+        g_out_gray => g_out_gray,
+        b_out_gray => b_out_gray
+    );
+
+    GRN : greenscale
+    PORT MAP(
+        clk => clk,
+        r_in_green => r_in_green,
+        g_in_green => g_in_green,
+        b_in_green => b_in_green,
+
+        r_out_green => r_out_green,
+        g_out_green => g_out_green,
+        b_out_green => b_out_green
+    );
+
+    RD : redscale
+    PORT MAP(
+        clk => clk,
+        r_in_red => r_in_red,
+        g_in_red => g_in_red,
+        b_in_red => b_in_red,
+
+        r_out_red => r_out_red,
+        g_out_red => g_out_red,
+        b_out_red => b_out_red
+    );
+
+    BL : bluescale
+    PORT MAP(
+        clk => clk,
+        r_in_blue => r_in_blue,
+        g_in_blue => g_in_blue,
+        b_in_blue => b_in_blue,
+
+        r_out_blue => r_out_blue,
+        g_out_blue => g_out_blue,
+        b_out_blue => b_out_blue
+    );
 
     PROCESS
         TYPE CHAR_FILE IS FILE OF CHARACTER;
@@ -100,13 +193,39 @@ BEGIN
         FOR ROW_I IN 0 TO IMG_H - 1 LOOP
             ROW := IMG(ROW_I);
             FOR COL_I IN 0 TO IMG_W - 1 LOOP
-                r_in <= ROW(COL_I).R;
-                g_in <= ROW(COL_I).G;
-                b_in <= ROW(COL_I).B;
-                WAIT UNTIL rising_edge(clk);
-                ROW(COL_I).R := r_out;
-                ROW(COL_I).G := g_out;
-                ROW(COL_I).B := b_out;
+                IF OPCODE = "000000" THEN
+                    r_in_gray <= ROW(COL_I).R;
+                    g_in_gray <= ROW(COL_I).G;
+                    b_in_gray <= ROW(COL_I).B;
+                    WAIT UNTIL rising_edge(clk);
+                    ROW(COL_I).R := r_out_gray;
+                    ROW(COL_I).G := g_out_gray;
+                    ROW(COL_I).B := b_out_gray;
+                ELSIF OPCODE = "000001" THEN
+                    r_in_green <= ROW(COL_I).R;
+                    g_in_green <= ROW(COL_I).G;
+                    b_in_green <= ROW(COL_I).B;
+                    WAIT UNTIL rising_edge(clk);
+                    ROW(COL_I).R := r_out_green;
+                    ROW(COL_I).G := g_out_green;
+                    ROW(COL_I).B := b_out_green;
+                ELSIF OPCODE = "000010" THEN
+                    r_in_red <= ROW(COL_I).R;
+                    g_in_red <= ROW(COL_I).G;
+                    b_in_red <= ROW(COL_I).B;
+                    WAIT UNTIL rising_edge(clk);
+                    ROW(COL_I).R := r_out_red;
+                    ROW(COL_I).G := g_out_red;
+                    ROW(COL_I).B := b_out_red;
+                ELSIF OPCODE = "000011" THEN
+                    r_in_blue <= ROW(COL_I).R;
+                    g_in_blue <= ROW(COL_I).G;
+                    b_in_blue <= ROW(COL_I).B;
+                    WAIT UNTIL rising_edge(clk);
+                    ROW(COL_I).R := r_out_blue;
+                    ROW(COL_I).G := g_out_blue;
+                    ROW(COL_I).B := b_out_blue;
+                END IF;
             END LOOP;
         END LOOP;
 
@@ -136,6 +255,6 @@ BEGIN
         file_close(DEST_FILE);
         DONE <= '1';
         REPORT "Done" SEVERITY NOTE;
-        WAIT;
+        FINISH;
     END PROCESS;
 END ARCHITECTURE rtl;
